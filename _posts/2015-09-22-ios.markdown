@@ -1,0 +1,29 @@
+---
+layout:     post
+title:      "Crash分析"
+subtitle:   "symbolicatecrash工具使用"
+date:       2015-09-22
+header-img: "img/post-bg-apple.jpg"
+tags:
+- iOS
+---
+
+Symbolicatecrash是Xcode自带的一个分析工具，可以通过机器上的崩溃日志和应用的.dSYM文件定位发生崩溃的位置，把crash日志中的地址替换成代码相应位置。
+<h5>找出隐藏的symbolicatecrash工具</h5>
+
+通过终端找出 symbolicatecrash 的路径 然后通过 cp 命令，或者直接到文件夹下拷贝出来，与crash文件和dSYM文件（*注意：crash文件要对应产生这个crash的dSYM文件哦*）放到同一个目录下。然后执行输出 log文件。代码步骤如下：
+
+```shell
+//查找symbolicatecrash位置
+find /Applications/Xcode.app -name symbolicatecrash -type f
+
+//拷贝到/Dowlaods/test/目录下，我只是举个例子，你方便放哪就放哪
+cp /Applications/Xcode.app/Contents/SharedFrameworks/DTDeviceKitBase.framework/Versions/A/Resources/symbolicatecrash /Dowlaods/test/symbolicatecrash
+
+//然后进入这个目录
+cd /Dowlaods/test/symbolicatecrash
+
+//输出log
+./symbolicatecrash 你的项目名字.app_你的项目名字.crash 你的项目名字.app.dSYM > error.log
+```
+查看error.log 文件就知道项目运行到哪崩溃啦～～
