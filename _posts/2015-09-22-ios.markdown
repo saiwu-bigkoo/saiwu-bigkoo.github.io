@@ -18,12 +18,19 @@ Symbolicatecrash是Xcode自带的一个分析工具，可以通过机器上的�
 find /Applications/Xcode.app -name symbolicatecrash -type f
 
 //拷贝到/Dowlaods/test/目录下，我只是举个例子，你方便放哪就放哪
-cp /Applications/Xcode.app/Contents/SharedFrameworks/DTDeviceKitBase.framework/Versions/A/Resources/symbolicatecrash /Dowlaods/test/symbolicatecrash
+cp /Applications/Xcode.app/Contents/SharedFrameworks/DTDeviceKitBase.framework/Versions/A/Resources/symbolicatecrash /Dowlaods/test/symbolicatecrash(这个路径不要直接拷贝哦～汗～～)
 
-//然后进入这个目录
+//然后进入刚刚拷贝到的目录
 cd /Dowlaods/test/symbolicatecrash
 
-//输出log
-./symbolicatecrash 你的项目名字.app_你的项目名字.crash 你的项目名字.app.dSYM > error.log
+//输出log  xxx.crash是你的错误crash文件 ，xxx.dSYM是对应的dSYM文件
+./symbolicatecrash xxx.crash xxx.dSYM > error.log
+
+//可能在这提示你"DEVELOPER_DIR" is not defined at ./symbolicatecrash xxx  不用慌张～执行下面这行，然后再执行一次上面输出log的操作就OK啦～～
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
 ```
 查看error.log 文件就知道项目运行到哪崩溃啦～～
+
+**知识补充：**
+.dSYM获取：`Xcode -> Window -> Organizer` 选择你项目的`Archives` ，选中对应构建的版本，右键 `show in Finder` 。这时候 窗口就会来到 你之前构建的 `.xcarchive` 文件位置中。然后右键显示包内容，来到dSYMs目录下找到 `你项目名字.dSYMs` 。
+.crash文件获取：上架后可以在上面.dSYM方式类似 ,Xcode会自动同步Crash，选择 `Crashes`，同样是显示包内容找到.crash 文件即可。或appstore拒绝上架的时候会附带在拒绝内容中。
