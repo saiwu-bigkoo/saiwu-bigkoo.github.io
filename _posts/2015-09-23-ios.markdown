@@ -10,151 +10,145 @@ tags:
 
 
 这些其实没什么技巧可言，无非是套用模版就行，废话少说上模版。
-```swift
+
+```
 //内购Demo，看代码说话吧
 class IAPTestViewController: UIViewController ,SKProductsRequestDelegate, SKPaymentTransactionObserver{
 
-let VERIFY_RECEIPT_URL = "https://buy.itunes.apple.com/verifyReceipt"
-let ITMS_SANDBOX_VERIFY_RECEIPT_URL = "https://sandbox.itunes.apple.com/verifyReceipt"
+    let VERIFY_RECEIPT_URL = "https://buy.itunes.apple.com/verifyReceipt"
+    let ITMS_SANDBOX_VERIFY_RECEIPT_URL = "https://sandbox.itunes.apple.com/verifyReceipt"
 
-var productDict:NSMutableDictionary!
+    var productDict:NSMutableDictionary!
 
-override func viewDidLoad() {
-super.viewDidLoad()
-SKPaymentQueue.defaultQueue().addTransactionObserver(self)
-requestProducts()//请求产品列表资料
+    override func viewDidLoad() {
+            super.viewDidLoad()
+            SKPaymentQueue.defaultQueue().addTransactionObserver(self)
+            requestProducts()//请求产品列表资料
+    }
+    deinit{
+        SKPaymentQueue.defaultQueue().removeTransactionObserver(self)
+    }
 
-}
-deinit{
-SKPaymentQueue.defaultQueue().removeTransactionObserver(self)
-}
-
-override func didReceiveMemoryWarning() {
-super.didReceiveMemoryWarning()
-// Dispose of any resources that can be recreated.
-}
-
-
-// 点击购买产品后触发的
-func onSelectRechargePackages(productId: String){
-//先判断是否支持内购
-if(SKPaymentQueue.canMakePayments()){
-buyProduct(productDict[productId] as! SKProduct)
-}
-else{
-println("============不支持内购功能")
-}
-
-}
-//询问苹果的服务器能够销售哪些商品
-func requestProducts(){
-var set = NSSet(array: ["你的产品id1","产品id2"。。。。更多])
-let request = SKProductsRequest(productIdentifiers: set as Set<NSObject>)
-request.delegate = self;
-request.start()
-}
-
-// 以上查询的回调函数
-func productsRequest(request: SKProductsRequest!, didReceiveResponse response: SKProductsResponse!) {
-if (productDict == nil) {
-productDict = NSMutableDictionary(capacity: response.products.count)
-}
-
-for product in response.products as! [SKProduct] {
-// 激活了对应的销售操作按钮，相当于商店的商品上架允许销售
-println("=======Product id=======\(product.productIdentifier)")
-println("===产品标题 ==========\(product.localizedTitle)")
-println("====产品描述信息==========\(product.localizedDescription)")
-println("=====价格: =========\(product.price)")
-
-// 填充商品字典
-productDict.setObject(product, forKey: product.productIdentifier)
+    override func didReceiveMemoryWarning() {
+        super.didReceiveMemoryWarning()
+        // Dispose of any resources that can be recreated.
+    }
 
 
-}
-}
-// 购买对应的产品
-func buyProduct(product: SKProduct){
+    // 点击购买产品后触发的
+    func onSelectRechargePackages(productId: String){
+        //先判断是否支持内购
+        if(SKPaymentQueue.canMakePayments()){
+            buyProduct(productDict[productId] as! SKProduct)
+        }
+        else{
+            println("============不支持内购功能")
+        }
+    }
+    //询问苹果的服务器能够销售哪些商品
+    func requestProducts(){
+        var set = NSSet(array: ["你的产品id1","产品id2"。。。。更多])
+        let request = SKProductsRequest(productIdentifiers: set as Set<NSObject>)
+        request.delegate = self;
+        request.start()
+    }
 
-var payment = SKPayment(product: product)
-SKPaymentQueue.defaultQueue().addPayment(payment)
-}
-func paymentQueue(queue: SKPaymentQueue!, updatedTransactions transactions: [AnyObject]!){
-// 调试
-for transaction in transactions {
-// 如果小票状态是购买完成
-if (SKPaymentTransactionState.Purchased == transaction.transactionState) {
-// 更新界面或者数据，把用户购买得商品交给用户
-println("支付成了＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
-// 验证购买凭据
-self.verifyPruchase()
+    // 以上查询的回调函数
+    func productsRequest(request: SKProductsRequest!, didReceiveResponse response: SKProductsResponse!) {
+        if (productDict == nil) {
+            productDict = NSMutableDictionary(capacity: response.products.count)
+        }
 
-// 将交易从交易队列中删除
-SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
+        for product in response.products as! [SKProduct] {
+            // 激活了对应的销售操作按钮，相当于商店的商品上架允许销售
+            println("=======Product id=======\(product.productIdentifier)")
+            println("===产品标题 ==========\(product.localizedTitle)")
+            println("====产品描述信息==========\(product.localizedDescription)")
+            println("=====价格: =========\(product.price)")
 
-}
-else if(SKPaymentTransactionState.Failed == transaction.transactionState){
-println("支付失败＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
-SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
-}
-else if (SKPaymentTransactionState.Restored == transaction.transactionState) {//恢复购买
-// 更新界面或者数据，把用户购买得商品交给用户
-// ...
+            // 填充商品字典
+            productDict.setObject(product, forKey: product.productIdentifier)
+        }
+    }
+    // 购买对应的产品
+    func buyProduct(product: SKProduct){
+        var payment = SKPayment(product: product)
+        SKPaymentQueue.defaultQueue().addPayment(payment)
+    }
+    func paymentQueue(queue: SKPaymentQueue!, updatedTransactions transactions: [AnyObject]!){
+        // 调试
+        for transaction in transactions {
+            // 如果小票状态是购买完成
+            if (SKPaymentTransactionState.Purchased == transaction.transactionState) {
+                // 更新界面或者数据，把用户购买得商品交给用户
+                println("支付成了＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
+                // 验证购买凭据
+                self.verifyPruchase()
 
-// 将交易从交易队列中删除
-SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
-}
+                // 将交易从交易队列中删除
+                SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
 
-}
+            }
+            else if(SKPaymentTransactionState.Failed == transaction.transactionState){
+                println("支付失败＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝＝")
+                SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
+            }
+            else if (SKPaymentTransactionState.Restored == transaction.transactionState) {//恢复购买
+                // 更新界面或者数据，把用户购买得商品交给用户
+                // ...
 
-}
-func verifyPruchase(){
-// 验证凭据，获取到苹果返回的交易凭据
-// appStoreReceiptURL iOS7.0增加的，购买交易完成后，会将凭据存放在该地址
-let receiptURL = NSBundle.mainBundle().appStoreReceiptURL
-// 从沙盒中获取到购买凭据
-let receiptData = NSData(contentsOfURL: receiptURL!)
-// 发送网络POST请求，对购买凭据进行验证
-let url = NSURL(string: ITMS_SANDBOX_VERIFY_RECEIPT_URL)
-// 国内访问苹果服务器比较慢，timeoutInterval需要长一点
-let request = NSMutableURLRequest(URL: url!, cachePolicy: NSURLRequestCachePolicy.UseProtocolCachePolicy, timeoutInterval: 10.0)
-request.HTTPMethod = "POST"
-// 在网络中传输数据，大多情况下是传输的字符串而不是二进制数据
-// 传输的是BASE64编码的字符串
-/**
-BASE64 常用的编码方案，通常用于数据传输，以及加密算法的基础算法，传输过程中能够保证数据传输的稳定性
-BASE64是可以编码和解码的
-*/
-let encodeStr = receiptData?.base64EncodedStringWithOptions(NSDataBase64EncodingOptions.EncodingEndLineWithLineFeed)
+                // 将交易从交易队列中删除
+                SKPaymentQueue.defaultQueue().finishTransaction(transaction as! SKPaymentTransaction)
+            }
 
-let payload = NSString(string: "{\"receipt-data\" : \"" + encodeStr! + "\"}")
-println(payload)
-let payloadData = payload.dataUsingEncoding(NSUTF8StringEncoding)
+        }
 
-request.HTTPBody = payloadData;
+    }
+    func verifyPruchase(){
+        // 验证凭据，获取到苹果返回的交易凭据
+        // appStoreReceiptURL iOS7.0增加的，购买交易完成后，会将凭据存放在该地址
+        let receiptURL = NSBundle.mainBundle().appStoreReceiptURL
+        // 从沙盒中获取到购买凭据
+        let receiptData = NSData(contentsOfURL: receiptURL!)
+        // 发送网络POST请求，对购买凭据进行验证
+        let url = NSURL(string: ITMS_SANDBOX_VERIFY_RECEIPT_URL)
+        // 国内访问苹果服务器比较慢，timeoutInterval需要长一点
+        let request = NSMutableURLRequest(URL: url!, cachePolicy: NSURLRequestCachePolicy.UseProtocolCachePolicy, timeoutInterval: 10.0)
+        request.HTTPMethod = "POST"
+        // 在网络中传输数据，大多情况下是传输的字符串而不是二进制数据
+        // 传输的是BASE64编码的字符串
+        /**
+        BASE64 常用的编码方案，通常用于数据传输，以及加密算法的基础算法，传输过程中能够保证数据传输的稳定性
+        BASE64是可以编码和解码的
+        */
+        let encodeStr = receiptData?.base64EncodedStringWithOptions(NSDataBase64EncodingOptions.EncodingEndLineWithLineFeed)
 
-// 提交验证请求，并获得官方的验证JSON结果
-let result = NSURLConnection.sendSynchronousRequest(request, returningResponse: nil, error: nil)
+        let payload = NSString(string: "{\"receipt-data\" : \"" + encodeStr! + "\"}")
+        println(payload)
+        let payloadData = payload.dataUsingEncoding(NSUTF8StringEncoding)
 
-// 官方验证结果为空
-if (result == nil) {
-//验证失败
-println("验证失败")
-return
-}
-var dict: AnyObject? = NSJSONSerialization.JSONObjectWithData(result!, options: NSJSONReadingOptions.AllowFragments, error: nil)
-if (dict != nil) {
-// 比对字典中以下信息基本上可以保证数据安全
-// bundle_id&application_version&product_id&transaction_id
-// 验证成功
-println(dict)
-}
-}
-func restorePurchase(){
-SKPaymentQueue.defaultQueue().restoreCompletedTransactions()
-}
+        request.HTTPBody = payloadData;
 
+        // 提交验证请求，并获得官方的验证JSON结果
+        let result = NSURLConnection.sendSynchronousRequest(request, returningResponse: nil, error: nil)
 
+        // 官方验证结果为空
+        if (result == nil) {
+            //验证失败
+            println("验证失败")
+            return
+        }
+        var dict: AnyObject? = NSJSONSerialization.JSONObjectWithData(result!, options: NSJSONReadingOptions.AllowFragments, error: nil)
+        if (dict != nil) {
+            // 比对字典中以下信息基本上可以保证数据安全
+            // bundle_id&application_version&product_id&transaction_id
+            // 验证成功
+            println(dict)
+        }
+    }
+    func restorePurchase(){
+        SKPaymentQueue.defaultQueue().restoreCompletedTransactions()
+    }
 }
 ```
 PS：过程中遇到的问题
