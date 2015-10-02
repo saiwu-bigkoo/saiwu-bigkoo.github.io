@@ -1,0 +1,177 @@
+---
+layout:     post
+title:      "gradle打包aar"
+subtitle:   "打包aar并发布到 JCenter"
+date:       2015-10-02
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+---
+
+以前使用开源库比较常用做法是下载源码包，通过import library引入。但通常我们都不需要修改源码，而且升级的时候又要去下载一次源码再替换，显得比较麻烦。后来转用Android Studio之后自带gradle构建项目，通过依赖管理轻松实现更新第三方库。我也开始把我的开源项目转为Android Studio，并提供aar包给开发者进行依赖。现在就开始介绍下怎么打包并发布aar。
+
+### 环境
+Android Studio 1.0+
+OSX 10.9+
+
+### 建立项目
+在Android Studio中新建一个Project。以我的PickerView控件为例，New 一个项目名叫 `PickerViewDemo` 的项目。
+然后之后在 `PickerViewDemo` 下会有一个`build.gradle(Project:PickerViewDemo)`，在buildscript里面的dependencies中添加两个classpath：
+
+```
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:1.0.0'
+        //请加入下面两行
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.0'
+        classpath 'com.github.dcendents:android-maven-plugin:1.2'
+        // NOTE: Do not place your application dependencies here; they belong
+        // in the individual module build.gradle files
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+    }
+}
+```
+
+### 建立真正的需要打包成aar的library库
+在当前`PickerViewDemo`的project中New一个`Module`，那么我的叫 `PickerView`，这个就是要打包成aar并发布的依赖库了。
+在`PickerView`下也有一个`build.gradle(pickerview)`，我们需要配置这个`build.gradle`。拷贝覆盖掉这个 build.gradle，然后请看注释来修改成你的。
+
+```
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+version = "1.0.1"   // #修改# // 这里是aar的版本号
+
+android {
+    compileSdkVersion 21
+    buildToolsVersion "20.0.0"
+
+    defaultConfig {
+        minSdkVersion 9
+        targetSdkVersion 21
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+}
+
+def siteUrl = 'https://github.com/saiwu-bigkoo/Android-PickerView'                        // #修改# // 项目的主页地址，我这里是我的PickerView项目在github的链接地址
+def gitUrl = 'https://github.com/saiwu-bigkoo/Android-PickerView.git'                     // #修改# // 项目 git 地址，我这里同样是用Github上的git地址
+group = "com.bigkoo"             // #修改# // 组名称，这个相当于依赖的时候 compile 'com.bigkoo:pickerview:1.0.1' “:”号前面的前缀
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                name 'PickerView For Android'                                   // #修改# // 标题
+                url siteUrl
+                // Set your license
+                licenses {
+                    license {
+                        name 'The Apache Software License, Version 2.0'
+                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                developers {
+                    developer {
+                        id 'sai'                                           // #修改# // 你的userid，昵称
+                        name 'sai.wu'                                       // #修改# // 用户名
+                        email 'sai.wu@bigkoo.com'                               // #修改# // 邮箱
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+                }
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+    source = android.sourceSets.main.java.srcDirs
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+artifacts {
+    archives javadocJar
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+    // 上面两个 user和key 需要留意一下，在local.properites 里面配置的
+    configurations = ['archives']
+    pkg {
+        repo = "maven"
+        name = "PickerView"                                                 // #修改# //  在 jcenter 上面的项目名字
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = ["Apache-2.0"]
+        publish = true
+    }
+}
+```
+然后我们需要到 [Bintray](https://bintray.com/) 上进行注册登录, 完成后到[编辑界面](https://bintray.com/profile/edit)左边菜单，查看`API Key`，点击show就能看到你的key了。接下来请拷贝这个key，然后回到项目中。
+在`local.properites` 加入两行配置：
+
+```
+bintray.user=这里填写你在Bintray中的user名字
+bintray.apikey=这里是你刚刚拷贝的key
+```
+`local.properites` 文件因为有你的隐私信息，所以如果上传到git上面，记得排除掉不要上传哦～～(即在`.gitignore`里面加入`local.properties`以忽略版本控制)
+
+### 打包和提交
+用终端进入到 PickerViewDemo的根目录。然后执行
+
+```
+gradle build//这个也可以省略，你修改gradle文件的时候Android Studio 提示你 sync gradle，你点击 sync 即可。
+gradlew bintrayUpload //上传到Bintray
+```
+上面已经传到Bintray上面了，接下来回到 [Bintray](https://bintray.com/)  网站，到个人主页，右下角`Latest Activity` 中会出现你刚刚上传的项目，如我的是`PickerView`，那么这就是你已经传到仓库中了，然后到[Jcenter](https://bintray.com/bintray/jcenter/) 中点击 `Include My Package` 
+选择这个项目，然后提交等待审核。
+
+### 依赖
+审核通过后，在`build.gradle(Module:app)`的`dependencies`里面加入
+
+```
+compile 'com.bigkoo:pickerview:1.0.1'//这是我的例子，请替换成你自己的
+```
+sync gradle 一下，就会自动下载aar并依赖，嗯，这样就完成了。
