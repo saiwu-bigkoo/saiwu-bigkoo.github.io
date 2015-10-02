@@ -162,8 +162,8 @@ bintray.apikey=这里是你刚刚拷贝的key
 用终端进入到 PickerViewDemo的根目录。然后执行
 
 ```
-gradle build//这个也可以省略，你修改gradle文件的时候Android Studio 提示你 sync gradle，你点击 sync 即可。
-gradlew bintrayUpload //上传到Bintray
+./gradlew build  //这个也可以省略，你修改gradle文件的时候Android Studio 提示你 sync gradle，你点击 sync 即可。
+./gradlew bintrayUpload //上传到Bintray
 ```
 上面已经传到Bintray上面了，接下来回到 [Bintray](https://bintray.com/)  网站，到个人主页，右下角`Latest Activity` 中会出现你刚刚上传的项目，如我的是`PickerView`，那么这就是你已经传到仓库中了，然后到[Jcenter](https://bintray.com/bintray/jcenter/) 中点击 `Include My Package` 
 选择这个项目，然后提交等待审核。
