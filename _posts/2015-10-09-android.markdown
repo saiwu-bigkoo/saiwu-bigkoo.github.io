@@ -6,6 +6,7 @@ date:       2015-10-09
 header-img: "img/post-bg-android.jpg"
 tags:
 - Android
+- 反编译和防反编译
 ---
 
 本文只作概念性讲解，不作详解，只是希望把我理解的原理简单地描述出来，不深入探究。
