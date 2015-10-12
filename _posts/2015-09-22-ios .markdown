@@ -6,6 +6,7 @@ date:       2015-09-22
 header-img: "img/post-bg-apple.jpg"
 tags:
 - iOS
+- Debug
 ---
 
 Symbolicatecrash是Xcode自带的一个分析工具，可以通过机器上的崩溃日志和应用的.dSYM文件定位发生崩溃的位置，把crash日志中的地址替换成代码相应位置。
