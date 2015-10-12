@@ -1,0 +1,78 @@
+---
+layout:     post
+title:      "反编译原理浅析"
+subtitle:   "反编译和防反编译系列"
+date:       2015-10-09
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+---
+
+本文只作概念性讲解，不作详解，只是希望把我理解的原理简单地描述出来，不深入探究。
+
+### JVM
+**JVM是什么？**
+我的理解简单来说是：一个能把Class字节码翻译成本机cpu能够识别的指令的程序。
+
+### 流程
+
+```
+Java源码(.java文件) => 编译器  =>  Class文件 => JVM => 可执行的指令
+```
+
+不一定只有Java，例如Scala，Groovy等基于JVM的语言，只要能编译成标准Class的都可以。
+
+### Class文件
+
+**class文件结构介绍：**
+    根据java虚拟机规范的规定，class文件格式采用一种类似c语言结构体的伪结构来存储，这种伪结构中只有两种数据类型：无符号数和表。
+无符号数：无符号数属于基本的数据类型，以u1,u2,u4,u8来分别代表1个字节，2个字节，4个字节和8个字节的无符号数，无符号数可以用来描述数字、索引引用、数量值，或者按照utf-8编码构成字符串值。
+表：表是由多个无符号数或者其他表作为数据项构成的复合数据类型，所有表都习惯性地以“_info“结尾。表用于描述有层次关系的复合结构的数据，整个class文件本质上就是一张表，它由下列数据项构成：
+
+```java
+ClassFile {  
+    u4 magic;//魔数(0xCAFEBABE)，每个class文件的前4个字节称为魔数，值为0xCAFEBABE。作用在于轻松的辨别class文件与非class文件。
+    //下面两个是版本号，随着Java技术的发展，class文件的格式会发生变化。版本号的作用在于使得虚拟机能够认识当前加载class的文件格式。从而准确的提取class文件信息
+    u2 minor_version;//次版本号
+    u2 major_version;//主版本号  
+    u2 constant_pool_count;//常量池容量计数值  
+    cp_info constant_pool[constant_pool_count-1];//常量池，具体见对照表  
+    u2 access_flags;//访问标志，用来表明该class文件中定义的是类还是接口，访问修饰符是public还是缺省。类或接口是否是抽象的。类是否是final的。  
+    u2 this_class;//类索引  
+    u2 super_class;//父类索引  
+    u2 interfaces_count;//接口计数器  
+    u2 interfaces[interfaces_count];//接口索引集合  
+    u2 fields_count;//字段计数器  
+    field_info fields[fields_count];//字段表  
+    u2 methods_count;//方法计数器  
+    method_info methods[methods_count];//方法表  
+    u2 attributes_count;//属性表计数器  
+    attribute_info attributes[attributes_count];//属性表集合  
+}  
+```
+
+**常量对照表**
+
+| 常量表类型      |     标志值(占1 byte) |   描述   |
+| :-------- | --------:| :------: |
+|CONSTANT_Utf8	|1	|UTF-8编码的Unicode字符串|
+|CONSTANT_Integer|	3	|int类型的字面值|
+|CONSTANT_Float	|4	|float类型的字面值|
+|CONSTANT_Long	|5	|long类型的字面值|
+|CONSTANT_Double	|6|	double类型的字面值|
+|CONSTANT_Class	|7|	对一个类或接口的符号引用|
+|CONSTANT_String	|8|	String类型字面值的引用|
+|CONSTANT_Fieldref	|9|	对一个字段的符号引用|
+|CONSTANT_Methodref	|10|	对一个类中方法的符号引用|
+|CONSTANT_InterfaceMethodref	|11	|对一个接口中方法的符号引用|
+|CONSTANT_NameAndType	|12|	对一个字段或方法的部分符号引用|
+
+如上面表格所示，每个类型都会有对应的tag值，还有方法权限标志表，描述符表之类的（省略了，想深入了解请看《深入理解Java虚拟机》）。根据这些tag值来表示，例如常量为`01 00 12 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B`，是int类型呢还是float呢，是public还是private？根据这些对照表来查出对应tag所表示的意义可以看出：
+- 01——tag值为1，类型为CONSTANT_Utf8_info；
+- 00 12——这个UTF-8编码的常量字符串长度为18；
+- 4C 6A 61 76 61 2F 6C 61 6E 67 2F 53 74 72 69 6E 67 3B——18个字节的字符串，对应：`Ljava/lang/String`(描述符,L 代表是引用类型);
+
+### 反编译原理
+
+Class按照上面说的tag值和表对照，就能分析出Class对应的Java文件结构，那么即遵循这样的规范反编译成Java文件，当然反编译出来的并非是原本一模一样的Java源码，而是根据分析重新生成的Java代码。
+

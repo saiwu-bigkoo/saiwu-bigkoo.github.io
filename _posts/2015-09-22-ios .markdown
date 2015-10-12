@@ -21,7 +21,7 @@ find /Applications/Xcode.app -name symbolicatecrash -type f
 cp /Applications/Xcode.app/Contents/SharedFrameworks/DTDeviceKitBase.framework/Versions/A/Resources/symbolicatecrash /Dowlaods/test/symbolicatecrash(这个路径不要直接拷贝哦～汗～～)
 
 //然后进入刚刚拷贝到的目录
-cd /Dowlaods/test/symbolicatecrash
+cd /Dowlaods/test/
 
 //输出log  xxx.crash是你的错误crash文件 ，xxx.dSYM是对应的dSYM文件
 ./symbolicatecrash xxx.crash xxx.dSYM > error.log
