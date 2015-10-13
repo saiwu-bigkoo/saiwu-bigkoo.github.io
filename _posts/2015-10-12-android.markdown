@@ -1,0 +1,31 @@
+---
+layout:     post
+title:      "反编译apk"
+subtitle:   "反编译和防反编译系列"
+date:       2015-10-12
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- 反编译和防反编译
+---
+
+
+### 环境
+OSX
+jdk 1.7
+
+### 工具
+[Apktool-2.0.2](http://ibotpeaches.github.io/Apktool/) 
+[dex2jar-2.0](https://github.com/pxb1988/dex2jar) 
+[jd-gui-0.3.5.osx.i686.dmg](https://github.com/java-decompiler/jd-gui) 
+
+把上面下载下来的文件统一放到一个文件夹中，然后cd到这个文件夹。
+通过 `touch apktool` 命令创建一个文件，然后拷贝[wrapper script](https://raw.githubusercontent.com/iBotPeaches/Apktool/master/scripts/osx/apktool)  上面的内容到 刚刚创建的 apktool文件中，并执行 `chmod +x apktool`修改apktool为可执行文件。
+
+### 流程
+
+- 查看资源文件。拷贝你需要反编译的apk文件到这些工具的同一目录。然后执行`./apktool d xx.apk`(xx是你对应的apk名字),这样就能看到资源文件了。
+
+- 转换成dex2jar.jar。解压dex2jar.zip 得到 dex2jar目录，然后执行 `sh dex2jar/d2j-dex2jar.sh xx.apk`, 可能会提示 Permission denied ，那么把提示Permission denied的那个文件设置一下权限，比如提示`dex2jar/d2j_invoke.sh: Permission denied` 那么设置为 `sudo chomd +x dex2jar/d2j_invoke.sh`，然后再重新执行 `sh dex2jar/d2j-dex2jar.sh xx.apk`命令，就会在当前目录生成 xx.-dex2jar.jar。
+
+- 查看java源码。运行 jd-gui ，打开xx.-dex2jar.jar 就能查看java源码了。
