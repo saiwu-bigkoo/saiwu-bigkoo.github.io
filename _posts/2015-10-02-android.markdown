@@ -6,6 +6,7 @@ date:       2015-10-02
 header-img: "img/post-bg-android.jpg"
 tags:
 - Android
+- Gradle
 ---
 
 以前使用开源库比较常用做法是下载源码包，通过import library引入。但通常我们都不需要修改源码，而且升级的时候又要去下载一次源码再替换，显得比较麻烦。后来转用Android Studio之后自带gradle构建项目，通过依赖管理轻松实现更新第三方库。我也开始把我的开源项目转为Android Studio，并提供aar包给开发者进行依赖。现在就开始介绍下怎么打包并发布aar。
