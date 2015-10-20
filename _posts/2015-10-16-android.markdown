@@ -1,0 +1,261 @@
+---
+layout:     post
+title:      "多渠道打包"
+subtitle:   "通过gradle进行多渠道打包"
+date:       2015-10-16
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- Gradle
+---
+
+
+### 环境
+OSX
+AndroidStudio 1.0
+
+### 多渠道设置
+
+
+#### 渠道号
+以友盟SDK为例，打包多渠道：**GooglePaly**，**小米**，**友盟**，**360**，**豌豆荚**，**应用宝**。
+在`AndroidManifest.xml`中加入渠道区分标识
+
+```xml
+<meta-data 
+    android:name="UMENG_CHANNEL"
+    android:value="${UMENG_CHANNEL_VALUE}" />
+```
+
+然后在`build.gradle(Module: app)`中加入渠道打包替换对应的`UMENG_CHANNEL_VALUE`代码
+
+```groovy
+// 渠道Flavors，配置不同的渠道
+    productFlavors {
+        GooglePaly {}
+        xiaomi {}
+        umeng {}
+        qihu360 {}
+        wandoujia {}
+        yingyongbao {}
+        //其他...
+    }
+
+    // 批量配置渠道
+    productFlavors.all {
+        flavor -> flavor.manifestPlaceholders = [UMENG_CHANNEL_VALUE: name]
+    }
+```
+
+#### apk名字
+我们还可以指定不同渠道号生成的apk的名字，这样方便打包出来区别哪个apk是对应哪个渠道的。以下的例子生成的命名格式 `app_v(版本号)_打包时间_渠道号.apk`
+
+```groovy
+android{
+
+        applicationVariants.all { variant ->
+            variant.outputs.each { output ->
+                def outputFile = output.outputFile
+                if (outputFile != null && outputFile.name.endsWith('.apk')) {
+                    File outputDirectory = new File(outputFile.parent);
+                    def fileName
+                    if (variant.buildType.name == "release") {
+                        fileName = "app_v${defaultConfig.versionName}_${packageTime()}_${variant.productFlavors[0].name}.apk"
+                    } else {
+                        fileName = "app_v${defaultConfig.versionName}_${packageTime()}_beta.apk"
+                    }
+                    output.outputFile = new File(outputDirectory, fileName)
+                }
+            }
+        }
+
+    }
+```
+
+### 打包
+
+#### 签名文件
+生成签名文件可用命令行生成，也可以直接用`AndroidStudio的Build -> Generate signed apk -> create new` 生成新证书即可。然后为了方便，这里我把证书放到 `项目 -> app` 目录下。
+
+#### 签名配置
+gradle支持直接签名打包，只需要设置一下证书的路径和对应密码一键打包出正式可以发布的apk。
+在`signingConfigs`里面写上对应的`storeFile`，`storePassword`，`keyAlias`，`keyPassword`
+一般地，为了保护签名文件，这些信息不应该写入到版本库中，我这里把它们写在`local.properties`中然后在版本库中排除这个文件。
+//获取local.properties的内容
+
+```groovy
+//这里是读取local.properties文件，提供给下方代码用来提取keystroe_storeFile等key的值
+Properties properties = new Properties()
+properties.load(project.rootProject.file('local.properties').newDataInputStream())
+```
+
+```groovy
+signingConfigs {
+
+        release {
+            // relase签名
+            storeFile file(properties.getProperty("keystroe_storeFile"))
+            storePassword properties.getProperty("keystroe_storePassword")
+            keyAlias properties.getProperty("keystroe_keyAlias")
+            keyPassword properties.getProperty("keystroe_keyPassword")
+        }
+    }
+```
+
+在`local.properties`文件中加入
+
+```groovy
+keystroe_storeFile=keystore.jks  //对应自己实际的证书路径和名字，因为我上面提到 把证书放在 项目的app目录下，所以不用写绝对路径。
+keystroe_storePassword=123456
+keystroe_keyAlias=alias
+keystroe_keyPassword=123456
+```
+
+
+#### 打包apk
+在终端窗口，或者可以使用AndroidStudio工具栏下面提供的终端 Terminal ，cd 到 项目根目录下执行:
+
+```shell
+// 打包出上面所有渠道apk
+./gradlew build
+// 下面这行例子是单独打包wandoujia渠道的apk
+// ./gradlew assembleWandoujia
+```
+
+对应渠道的apk就会自动在 `项目/app/build/outputs/apk/` 目录下按照上面指定的命名格式生成了。
+
+### 产品定制
+
+#### ApplicationId，版本号
+
+Android 应用都有自己的包名。包名是设备上每个应用程序的唯一标识，同样也是在各个下载平台的**唯一标识**。就是说，假如你已经使用某个包名来发布应用，就不能再去改变应用的包名，因为这样做会导致你的应用被视为一个全新的应用，你现有的用户也不会收到应用的更新通知。
+有时候我们需要发布不同的版本，例如 **pro**，**hd** 版本，支持用户可以下载安装不同的版本。那么我们需要设置不同的**ApplicationId**和对应的**版本号**， 同时要与 PackageName 解耦合。
+
+- 代码中引用的 R 类要保持不变；
+
+- 在构建不同版本的应用时，对应的（引用了 R 的） .java 源文件也不能改动。
+
+那么我们只需要在`productFlavors`对应的渠道中指定`applicationId`和`versionCode，versionName`，例我们指定**GooglePaly**的`applicationId`：
+
+```groovy
+productFlavors {
+        GooglePaly {
+            //指定这个渠道的版本号
+            versionCode 2
+            versionName "2.0"
+            //指定区别于其他渠道的 applicationId
+            applicationId "com.bigkoo.gradledemo.hd"
+        }
+        xiaomi {}
+        umeng {}
+        qihu360 {}
+        wandoujia {}
+        yingyongbao {}
+        //其他...
+    }
+```
+
+#### BuildConfig
+
+Gradle会在generateSources阶段为flavor生成一个`BuildConfig.java`文件。BuildConfig类默认提供了一些常量字段，比如应用的版本名（`VERSION_NAME`），应用的包名（`PACKAGE_NAME`）等。更强大的是，开发者还可以添加自定义的一些字段。下面的示例假设`debug`版开启`LOG`功能，使用`test的api`，而发布版则使用不开启`LOG`和使用`发布时的api`：
+
+```groovy
+buildTypes {
+        debug {
+            // debug模式下，显示log
+            buildConfigField("boolean", "LOG_DEBUG", "true")
+            buildConfigField ("String", "API_HOST", "\"http://api.test.com\"")//API Host
+        }
+        release {
+            // release模式下，不显示log
+            buildConfigField("boolean", "LOG_DEBUG", "false")
+            buildConfigField("String", "API_HOST", "\"http://api.release.com\"")//API Host
+        }
+    }
+```
+
+那么代码中就可以使用 BuildConfig.LOG_DEBUG 和 BuildConfig.API_HOST 了。
+甚至可以在`productFlavors`对应的渠道号进行区别，例如豌豆荚版默认禁止版本自动更新：
+
+```groovy
+android {
+    defaultConfig {
+        buildConfigField "boolean", "AUTO_UPDATES", "true"
+    }
+
+    productFlavors {
+        wandoujia {
+            buildConfigField "boolean", "AUTO_UPDATES", "false"
+        }        
+    }
+
+}
+```
+
+#### 资源
+
+通常对于不同渠道，我们会区别不同的资源。例如我们一款应用需要在**360**发布，而应用图标和欢迎界面要一个**360**标志的图，那么这个时候就需要按渠道打包对应的应用图标和欢迎图片了。Gradle在构建应用时，会优先使用`flavor`所属`dataSet`中的同名资源。所以，在`flavor`的`dataSet`中添加同名的字符串资源，以覆盖默认的资源。
+上面我们已经有针对**360**的渠道了，就是`qihu360`，我们只需要在 `app/src/` 目录下添加渠道对应的文件夹`qihu360`，然后覆盖对应要覆盖的内容。下面是定制应用图标的步骤：
+
+- 添加**qihu360**文件夹，那么在 `app/src/` 目录下面就有 **main** , **androidTest** , **qihu360** 这三个文件夹了。**main** 目录是通用正常渠道包目录，**qihu360**是我们需要定制资源的渠道包目录。
+
+- 仿**main**的目录，添加 `res/drawable/ic_launcher.png` 图片以覆盖对应在 **main**里面的`res/drawable/ic_launcher.png`
+
+通过以上例子，举一反三。定制其他资源，包括`strings.xml` ， `styles.xml` 甚至`AndroidManifest.xml` 也都是可以的。
+
+#### 第三方库
+
+有些渠道需要加入广告，应用墙推荐，而有些则不上广告，我们常常也会遇到这样的问题吧。那么现在来说说怎么对于第三方库进行渠道区分打包。
+这里以我的开源项目 为例，其他库或广告SDK同理：
+
+```groovy
+dependencies {
+    compile fileTree(dir: 'libs', include: ['*.jar'])
+    compile 'com.android.support:appcompat-v7:21.0.3'
+    //参与编译but不参与打包
+    provided 'com.bigkoo:alertview:1.0.1'
+    //指定qihu360这个渠道可以打包这个库
+    qihu360Compile 'com.bigkoo:alertview:1.0.1'
+}
+```
+
+然后在代码中进行反射判断是否有这个库存在，如果有就使用，没有就不使用。（**或者用上面提及的BuildConfig方式设置一个渠道常量来判断也可以**）
+
+```java
+public class MainActivity extends Activity {
+
+    private boolean useAlertView;
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        try {
+            Class.forName("com.bigkoo.alertview.AlertView");
+            useAlertView = true;
+        } catch (ClassNotFoundException ignored) {
+
+        }
+    }
+
+    public void showAlertView(View view) {
+        if(useAlertView) {
+            new AlertView("标题", "内容", null, new String[]{"确定"}, null, this, AlertView.Style.Alert, null).show();
+        }
+    }
+}
+```
+
+### 总结
+
+常用的多渠道打包方式已经介绍完了，基本能满足日常大部分多渠道打包开发使用。如果你想更深入了解，请看Groovy，自己来定制一些任务。
+
+### 本文参考
+
+[Gradle](http://www.gradle.org/)
+[美团Android自动化之旅—适配渠道包](http://tech.meituan.com/mt-apk-adaptation.html)
+[安卓集成发布详解（二）](http://frank-zhu.github.io/android/2015/06/15/android-release_app_build_gradle/)
+
+### 源码
+
+本文例子的源码放在我的Github上了，地址：[GradleDemo](https://github.com/saiwu-bigkoo/GradleDemo)  (**PS:例子为了提供完整的演示，没有在`.gitigonore`里面加入 `/local.properties` 排除，实际是要加入的，另外签名文件也一并附上了，也实际是需要排除的。**)
