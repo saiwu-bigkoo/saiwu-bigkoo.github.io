@@ -18,7 +18,7 @@ AndroidStudio 1.0
 
 
 #### 渠道号
-以友盟SDK为例，打包多渠道：**GooglePaly**，**小米**，**友盟**，**360**，**豌豆荚**，**应用宝**。
+以友盟SDK为例，打包多渠道：**GooglePlay**，**小米**，**友盟**，**360**，**豌豆荚**，**应用宝**。
 在`AndroidManifest.xml`中加入渠道区分标识
 
 ```xml
@@ -32,7 +32,7 @@ AndroidStudio 1.0
 ```groovy
 // 渠道Flavors，配置不同的渠道
     productFlavors {
-        GooglePaly {}
+        GooglePlay {}
         xiaomi {}
         umeng {}
         qihu360 {}
@@ -135,11 +135,11 @@ Android 应用都有自己的包名。包名是设备上每个应用程序的唯
 
 - 在构建不同版本的应用时，对应的（引用了 R 的） .java 源文件也不能改动。
 
-那么我们只需要在`productFlavors`对应的渠道中指定`applicationId`和`versionCode，versionName`，例我们指定**GooglePaly**的`applicationId`：
+那么我们只需要在`productFlavors`对应的渠道中指定`applicationId`和`versionCode，versionName`，例我们指定**GooglePlay**的`applicationId`：
 
 ```groovy
 productFlavors {
-        GooglePaly {
+        GooglePlay {
             //指定这个渠道的版本号
             versionCode 2
             versionName "2.0"
