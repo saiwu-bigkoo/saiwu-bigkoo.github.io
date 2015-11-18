@@ -1,0 +1,80 @@
+---
+layout:     post
+title:      "Drawable的Tint变色"
+subtitle:   "让Android也能有iOS那么方便的图片色调转换"
+date:       2015-11-18
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+---
+
+开发**iOS**应用的时候，图片很多时候只要一张，改变不同的色调就能变化出“正常、点击、选中、不能编辑”等不同的效果。而**Android**以前是通过多张图片（很多时候是一张基础图然后美工修改出几种不同颜色对应不同效果，对比**iOS**的**Tint**效果简直是low爆了有木有），以前在想，如果**Android**也能有这么方便的效果就好了。嗯嗯，今天就来介绍下**Android**的**Drawable**方法。
+
+其实关键的类就是 `Android Support v4` 的包中提供了 `DrawableCompat` 。
+
+我们可以封装一个静态函数方便使用，如下：
+
+```java
+public static Drawable tintDrawable(Drawable drawable, ColorStateList colors) {
+    final Drawable wrappedDrawable = DrawableCompat.wrap(drawable);
+    DrawableCompat.setTintList(wrappedDrawable, colors);
+    return wrappedDrawable;
+}
+```
+
+新建一个Activity，并在layout加入ImageButton作为演示效果的控件。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" 
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+    <ImageButton
+        android:id="@+id/ivButton"
+        android:src="@drawable/batman"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+</RelativeLayout>
+```
+
+好了，网上找一个图片取名**batman**，就是上面ImageButton的src
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/batman.png)
+
+接下来我们在Activity代码中把src由黑色改为白色。
+
+```java
+ImageButton ivButton = (ImageButton) findViewById(R.id.ivButton);
+Drawable src = ivButton.getDrawable();
+ivButton.setImageDrawable(tintDrawable(src,ColorStateList.valueOf(Color.WHITE)));
+```
+
+运行一下，ImageButton的图片batman就神奇的变成白色了～
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/D2D2F182-FED0-4BA6-AF57-6CAF8B51ED45.png)
+
+那么我们平时是通过`selector`来设置不同状态图片的，我们需要点击来改变图片颜色怎么办呢？
+不用担心，同样支持`selector`来改变颜色。接下来我们要创建这个控制状态颜色的`selector`。
+在`color`目录下`new` 一个 `xml`取名为“**selector_imagebutton_batman**.xml”作为我们的控制颜色`selector`，点击变为粉红色，正常状态为蓝色。
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="#FF4081" android:state_pressed="true" />
+    <item android:color="#3F51B5" />
+</selector>
+```
+
+然后我们把刚刚传给tintDrawable函数的参数改为selector即可
+
+```java
+ivButton = (ImageButton) findViewById(R.id.ivButton);
+Drawable src = ivButton.getDrawable();
+//        ivButton.setImageDrawable(tintDrawable(src,ColorStateList.valueOf(Color.WHITE)));
+ivButton.setImageDrawable(tintDrawable(src,getResources().getColorStateList(R.color.selector_imagebutton_batman)));
+```
+
+我们来看看效果吧～～
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/tintdemo.gif)
+
