@@ -1,0 +1,33 @@
+---
+layout:     post
+title:      "UIScrollView的AutoLayout设置"
+subtitle:   "在Storyboard中使用UIScrollView"
+date:       2016-01-21
+header-img: "img/post-bg-apple.jpg"
+tags:
+- iOS
+---
+
+
+#### UIScrollView的AutoLayout设置
+> UIScrollView在Storyboard中使用AutoLayout设置比较特殊，因为除了简单的宽高之外，还有contentSize。这一篇就来说说怎么正确的设置UIScrollView而不提示Warnning。
+
+1. 建立一个UIViewController，拖进UIScrollView并给UIScrollView里面拖进一个UIView作为内容的根View(命名为Content View)，这个根View的大小就会是contentSize的大小(一会你就会明白)。
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/Screen-Shot-2015-05-15-at-10.01.23.png)
+
+2. 给UIScrollView设置约束，跟上一级UIView(即UIViewController的根View)设置对应约束，这里设置为满屏，四周都是0。
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/Screen-Shot-2015-05-15-at-10.03.13.png)
+
+3. 接着给UIScrollView的内容View(Content View)设置约束，四周紧贴UIScrollView，即四周都是0。
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/Screen-Shot-2015-05-15-at-10.07.29.png)
+
+4. 按步骤3设置过后，依然是有Warnning提示，需要你固定宽高值。所以最关键的一步要来了。我们只需把Content View 连线到 UIViewController的根View ，并进行约束（equal Widths 和 equal Heights），Content View 和 UIViewController的根View 宽度一样，高度也一样(高度可以设置 ＋100 / 具体你实际的差距)。因为Content View 的高度是可以影响 UIScrollView的滚动的，具体大小自己设置。
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/ctrl-drag-content-view.png)
+
+![enter image description here](http://7xnh65.com1.z0.glb.clouddn.com/Screen-Shot-2015-05-15-at-10.09.32.png)
+
+这样就完美了。
