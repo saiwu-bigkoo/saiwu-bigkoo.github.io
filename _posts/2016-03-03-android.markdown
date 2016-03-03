@@ -1,0 +1,128 @@
+---
+layout:     post
+title:      “给RecyclerView添加ItemClickListener”
+subtitle:   
+date:       2016-03-03
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+---
+
+
+> RecyclerView几乎能完美替代ListView，并且能实现更多自定义的样式，但遗憾的是RecyclerView不提供setOnItemClickListener方法，需要在ViewHolder中添加事件。
+
+好在RecyclerView提供ItemView Attach监听，当触发OnChildAttachStateChangeListener的时候，我们可以在ItemView加进RecyclerView的时候为这个ItemView添加上OnItemClickListener。代码如下：
+
+```java
+public class ItemClickSupport {
+    private final RecyclerView mRecyclerView;
+    private OnItemClickListener mOnItemClickListener;
+    private OnItemLongClickListener mOnItemLongClickListener;
+    private View.OnClickListener mOnClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            if (mOnItemClickListener != null) {
+                RecyclerView.ViewHolder holder = mRecyclerView.getChildViewHolder(v);
+                mOnItemClickListener.onItemClicked(mRecyclerView, holder.getAdapterPosition(), v);
+            }
+        }
+    };
+    private View.OnLongClickListener mOnLongClickListener = new View.OnLongClickListener() {
+        @Override
+        public boolean onLongClick(View v) {
+            if (mOnItemLongClickListener != null) {
+                RecyclerView.ViewHolder holder = mRecyclerView.getChildViewHolder(v);
+                return mOnItemLongClickListener.onItemLongClicked(mRecyclerView, holder.getAdapterPosition(), v);
+            }
+            return false;
+        }
+    };
+    private RecyclerView.OnChildAttachStateChangeListener mAttachListener
+            = new RecyclerView.OnChildAttachStateChangeListener() {
+        @Override
+        public void onChildViewAttachedToWindow(View view) {
+            if (mOnItemClickListener != null) {
+                view.setOnClickListener(mOnClickListener);
+            }
+            if (mOnItemLongClickListener != null) {
+                view.setOnLongClickListener(mOnLongClickListener);
+            }
+        }
+
+        @Override
+        public void onChildViewDetachedFromWindow(View view) {
+
+        }
+    };
+
+    private ItemClickSupport(RecyclerView recyclerView) {
+        mRecyclerView = recyclerView;
+        mRecyclerView.setTag(R.id.item_click_support, this);
+        mRecyclerView.addOnChildAttachStateChangeListener(mAttachListener);
+    }
+
+    public static ItemClickSupport addTo(RecyclerView view) {
+        ItemClickSupport support = (ItemClickSupport) view.getTag(R.id.item_click_support);
+        if (support == null) {
+            support = new ItemClickSupport(view);
+        }
+        return support;
+    }
+
+    public static ItemClickSupport removeFrom(RecyclerView view) {
+        ItemClickSupport support = (ItemClickSupport) view.getTag(R.id.item_click_support);
+        if (support != null) {
+            support.detach(view);
+        }
+        return support;
+    }
+
+    public ItemClickSupport setOnItemClickListener(OnItemClickListener listener) {
+        mOnItemClickListener = listener;
+        return this;
+    }
+
+    public ItemClickSupport setOnItemLongClickListener(OnItemLongClickListener listener) {
+        mOnItemLongClickListener = listener;
+        return this;
+    }
+
+    private void detach(RecyclerView view) {
+        view.removeOnChildAttachStateChangeListener(mAttachListener);
+        view.setTag(R.id.item_click_support, null);
+    }
+
+    public interface OnItemClickListener {
+
+        void onItemClicked(RecyclerView recyclerView, int position, View v);
+    }
+
+    public interface OnItemLongClickListener {
+
+        boolean onItemLongClicked(RecyclerView recyclerView, int position, View v);
+    }
+}
+```
+
+上面用到的`R.id.item_click_support`我们需要在ids.xml里面加入：
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <item name="item_click_support" type="id" />
+</resources>
+```
+
+然后我们可以这样方便的添加OnItemClickListener了：
+
+```java
+ItemClickSupport.addTo(mRecyclerView).setOnItemClickListener(new ItemClickSupport.OnItemClickListener() {
+    @Override
+    public void onItemClicked(RecyclerView recyclerView, int position, View v) {
+        // do it
+    }
+});
+```
+
+### 参考
+[littlerobots](http://www.littlerobots.nl/blog/Handle-Android-RecyclerView-Clicks/)
