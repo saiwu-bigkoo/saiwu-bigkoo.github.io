@@ -38,5 +38,9 @@ Databinding可以跳过Activity的findViewById直接和xml中控件进行双向�
 
 ### 参考
 [MasteringAndroidDataBinding](https://github.com/LyndonChin/MasteringAndroidDataBinding)
+
 [binding-collection-adapter](https://github.com/evant/binding-collection-adapter)
+
 [Two-way Android Data Binding](http://www.jianshu.com/p/c481d1f4e0b6)
+
+QQ群：Data Binding 交流群（324112728）
