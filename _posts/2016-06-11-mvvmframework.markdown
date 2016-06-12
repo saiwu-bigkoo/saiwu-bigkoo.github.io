@@ -34,7 +34,7 @@ Databinding可以跳过Activity的findViewById直接和xml中控件进行双向�
 ```
 
 ### Github
-这个库的使用，demo 中已经给出了各种情况使用的例子了，请到[MVVMFramework](https://github.com/saiwu-bigkoo/MVVMFramework)
+这个库的使用，demo 中已经给出了各种情况使用的例子了，请到[MVVMFramework](https://github.com/saiwu-bigkoo/Android-MVVMFramework)
 
 ### 参考
 [MasteringAndroidDataBinding](https://github.com/LyndonChin/MasteringAndroidDataBinding)
