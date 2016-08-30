@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      如何优雅的快速搭建MVVM项目
+subtitle:   MVVMFramework系列教程(六)
+date:       2016-08-30
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- MVVM模式
+--- 
+
 列表说完了，接下来就是详情页了，详情页无非就是加载数据，其实很简单，和列表实现相同的规范。
 
 ### BaseDetailViewModel

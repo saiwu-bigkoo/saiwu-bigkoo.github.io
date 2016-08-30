@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      如何优雅的快速搭建MVVM项目
+subtitle:   MVVMFramework系列教程(一)
+date:       2016-08-30
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- MVVM模式
+--- 
+
 MVVMFramework 是基于Databinding上建立一套MVVM代码规范，继承对应的BaseViewModel就能轻松实现快速MVVM模式开发。
 Databinding资料相对还是比较少，但是官方给出已经很全面了，入门可能有点难，但是上手后开发效率可谓是极速，下面来介绍介绍这套基于Databinding建立的MVVMFramework。
 

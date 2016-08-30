@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      如何优雅的快速搭建MVVM项目
+subtitle:   MVVMFramework系列教程(三)
+date:       2016-08-30
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- MVVM模式
+--- 
+
 统一规范的BaseViewModel和HttpServiceCallBack已经建好，那么把两者关联起来实现加载列表内容的时刻到了。
 列表特性就是分页去加载数据，默认的按 page（当前第几页） 和 pageSize（一页多少个item）来控制分页，而当加载数据返回的item 数量比 pageSize 小则视为没有更多数据了，所以列表拓展BaseViewModel多一个hasMore的状态判断是否有下一页数据。
 因为列表有个下拉刷新的概念，加载第一页的时候认为是刷新中状态。

@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      如何优雅的快速搭建MVVM项目
+subtitle:   MVVMFramework系列教程(二)
+date:       2016-08-30
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- MVVM模式
+--- 
+
 上一章讲到BaseViewModel中几个状态，而通常这几个状态都是根据网络返回情况来判断的，建立一个基类写一个通用的网络回调的话，就能把各种状态设置好，不用在每个具体实现的类里重复去设置了。
 
 ### Retrofit

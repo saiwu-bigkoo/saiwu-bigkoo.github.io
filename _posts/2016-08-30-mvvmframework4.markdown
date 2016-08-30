@@ -1,3 +1,14 @@
+---
+layout:     post
+title:      如何优雅的快速搭建MVVM项目
+subtitle:   MVVMFramework系列教程(四)
+date:       2016-08-30
+header-img: "img/post-bg-android.jpg"
+tags:
+- Android
+- MVVM模式
+--- 
+
 获取列表数据并显示已经通过BaseRecyclerViewModel实现了，但是列表还不支持下拉刷新功能，所以我们还必须通过Databinding双向绑定来把ViewModel的refreshing和xml的SwipeRefreshLayout控件进行绑定。
 
 ### BaseRefreshRecyclerViewModel
